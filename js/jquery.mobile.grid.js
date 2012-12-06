@@ -22,7 +22,7 @@ $.fn.grid = function( options ) {
 			iterator;
 
 			if ( !grid ) {
-				if ( $kids.length <= 5 ) {
+				if ( $kids.length <= 7 ) {
 					for ( var letter in gridCols ) {
 						if ( gridCols[ letter ] === $kids.length ) {
 							grid = letter;
