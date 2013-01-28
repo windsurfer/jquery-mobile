@@ -68,7 +68,15 @@
 		return false;
 	};
 
+	var homeWithSearch = $.mobile.path.parseUrl(location.pathname).pathname + location.search;
+
 	module(libName, {
+		setup: function() {
+			$.mobile.navigate.history.stack = [];
+			$.mobile.navigate.history.activeIndex = 0;
+			$.testHelper.navReset( homeWithSearch );
+		},
+
 		teardown: function(){
 			$.mobile.defaultDialogTransition = originalDefaultDialogTrans;
 			$.mobile.defaultTransitionHandler = originalDefTransitionHandler;
@@ -420,18 +428,20 @@
 			$label = $select.parent().siblings( "label" ),
 			$button = $select.siblings( "a" );
 
-		$label.text( "foo" );
-
-		$.testHelper.pageSequence([
+		$.testHelper.detailedEventCascade([
 			function() {
 				$label.text( "foo" );
 				$button.click();
 			},
 
+			{ pagechange: { src: $.mobile.pageContainer, event: "pagechange.dialogSizeSelectTitleMod1" } },
+
 			function() {
 				deepEqual($.mobile.activePage.find( ".ui-title" ).text(), $label.text());
 				window.history.back();
 			},
+
+			{ pagechange: { src: $.mobile.pageContainer, event: "pagechange.dialogSizeSelectTitleMod2" } },
 
 			start
 		]);

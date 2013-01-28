@@ -5,7 +5,7 @@
 //>>css.structure: ../css/structure/jquery.mobile.dialog.css
 //>>css.theme: ../css/themes/default/jquery.mobile.theme.css
 
-define( [ "jquery", "../jquery.mobile.widget" ], function( $ ) {
+define( [ "jquery", "../jquery.mobile.widget", "../jquery.mobile.navigation" ], function( $ ) {
 //>>excludeEnd("jqmBuildExclude");
 (function( $, window, undefined ) {
 
@@ -59,9 +59,6 @@ $.widget( "mobile.dialog", $.mobile.widget, {
 				$target.attr( "data-" + $.mobile.ns + "transition", ( active.transition || $.mobile.defaultDialogTransition ) )
 					.attr( "data-" + $.mobile.ns + "direction", "reverse" );
 			}
-		})
-		.bind( "pagehide", function( e, ui ) {
-			$( this ).find( "." + $.mobile.activeBtnClass ).not( ".ui-slider-bg" ).removeClass( $.mobile.activeBtnClass );
 		});
 
 		this._on( $el, {
@@ -86,7 +83,7 @@ $.widget( "mobile.dialog", $.mobile.widget, {
 			// Sanitize value
 			location = ( value === "left" ? "left" : "right" );
 			btn = $( "<a href='#' class='ui-btn-" + location + "' data-" + $.mobile.ns + "icon='delete' data-" + $.mobile.ns + "iconpos='notext'>"+ this.options.closeBtnText + "</a>" );
-			this.element.children().find( ":jqmData(role='header')" ).prepend( btn );
+			this.element.children().find( ":jqmData(role='header')" ).first().prepend( btn );
 			if ( this._createComplete && $.fn.buttonMarkup ) {
 				btn.buttonMarkup();
 			}
@@ -116,26 +113,32 @@ $.widget( "mobile.dialog", $.mobile.widget, {
 
 	// Close method goes back in history
 	close: function() {
-		var dst;
+		var idx, dst, hist = $.mobile.navigate.history;
 
 		if ( this._isCloseable ) {
 			this._isCloseable = false;
-			if ( $.mobile.hashListeningEnabled ) {
+			// If the hash listening is enabled and there is at least one preceding history
+			// entry it's ok to go back. Initial pages with the dialog hash state are an example
+			// where the stack check is necessary
+			if ( $.mobile.hashListeningEnabled && hist.activeIndex > 0 ) {
 				$.mobile.back();
 			} else {
-				dst = $.mobile.urlHistory.getPrev().url;
+				idx = Math.max( 0, hist.activeIndex - 1 );
+				dst = hist.stack[ idx ].pageUrl || hist.stack[ idx ].url;
+				hist.previousIndex = hist.activeIndex;
+				hist.activeIndex = idx;
 				if ( !$.mobile.path.isPath( dst ) ) {
 					dst = $.mobile.path.makeUrlAbsolute( "#" + dst );
 				}
 
-				$.mobile.changePage( dst, { changeHash: false, fromHashChange: true } );
+				$.mobile.changePage( dst, { direction: "back", changeHash: false, fromHashChange: true } );
 			}
 		}
 	}
 });
 
 //auto self-init widgets
-$( document ).delegate( $.mobile.dialog.prototype.options.initSelector, "pagecreate", function() {
+$.mobile.document.delegate( $.mobile.dialog.prototype.options.initSelector, "pagecreate", function() {
 	$.mobile.dialog.prototype.enhance( this );
 });
 

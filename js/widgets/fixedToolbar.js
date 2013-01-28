@@ -17,7 +17,7 @@ define( [ "jquery", "../jquery.mobile.widget", "../jquery.mobile.core", "../jque
 			transition: "slide", //can be none, fade, slide (slide maps to slideup or slidedown)
 			fullscreen: false,
 			tapToggle: true,
-			tapToggleBlacklist: "a, button, input, select, textarea, .ui-header-fixed, .ui-footer-fixed, .ui-popup",
+			tapToggleBlacklist: "a, button, input, select, textarea, .ui-header-fixed, .ui-footer-fixed, .ui-popup, .ui-panel, .ui-panel-dismiss-open",
 			hideDuringFocus: "input, textarea, select",
 			updatePagePadding: true,
 			trackPersistentToolbars: true,
@@ -29,35 +29,7 @@ define( [ "jquery", "../jquery.mobile.widget", "../jquery.mobile.core", "../jque
 			// The following function serves to rule out some popular browsers with known fixed-positioning issues
 			// This is a plugin option like any other, so feel free to improve or overwrite it
 			supportBlacklist: function() {
-				var w = window,
-					ua = navigator.userAgent,
-					platform = navigator.platform,
-					// Rendering engine is Webkit, and capture major version
-					wkmatch = ua.match( /AppleWebKit\/([0-9]+)/ ),
-					wkversion = !!wkmatch && wkmatch[ 1 ],
-					ffmatch = ua.match( /Fennec\/([0-9]+)/ ),
-					ffversion = !!ffmatch && ffmatch[ 1 ],
-					operammobilematch = ua.match( /Opera Mobi\/([0-9]+)/ ),
-					omversion = !!operammobilematch && operammobilematch[ 1 ];
-
-				if(
-					// iOS 4.3 and older : Platform is iPhone/Pad/Touch and Webkit version is less than 534 (ios5)
-					( ( platform.indexOf( "iPhone" ) > -1 || platform.indexOf( "iPad" ) > -1  || platform.indexOf( "iPod" ) > -1 ) && wkversion && wkversion < 534 ) ||
-					// Opera Mini
-					( w.operamini && ({}).toString.call( w.operamini ) === "[object OperaMini]" ) ||
-					( operammobilematch && omversion < 7458 )	||
-					//Android lte 2.1: Platform is Android and Webkit version is less than 533 (Android 2.2)
-					( ua.indexOf( "Android" ) > -1 && wkversion && wkversion < 533 ) ||
-					// Firefox Mobile before 6.0 -
-					( ffversion && ffversion < 6 ) ||
-					// WebOS less than 3
-					( "palmGetResource" in window && wkversion && wkversion < 534 )	||
-					// MeeGo
-					( ua.indexOf( "MeeGo" ) > -1 && ua.indexOf( "NokiaBrowser/8.5.0" ) > -1 ) ) {
-					return true;
-				}
-
-				return false;
+				return !$.support.fixedPosition;
 			},
 			initSelector: ":jqmData(position='fixed')"
 		},
@@ -117,7 +89,9 @@ define( [ "jquery", "../jquery.mobile.widget", "../jquery.mobile.core", "../jque
 			// This method is meant to disable zoom while a fixed-positioned toolbar page is visible
 			this._on( this._thisPage, {
 				"pagebeforeshow": "_handlePageBeforeShow",
-				"webkitAnimationStart animationstart updatelayout": "_handleAnimationStart",
+				"webkitAnimationStart":"_handleAnimationStart",
+				"animationstart":"_handleAnimationStart",
+				"updatelayout": "_handleAnimationStart",
 				"pageshow": "_handlePageShow",
 				"pagebeforehide": "_handlePageBeforeHide"
 			});
@@ -142,7 +116,7 @@ define( [ "jquery", "../jquery.mobile.widget", "../jquery.mobile.core", "../jque
 		_handlePageShow: function() {
 			this.updatePagePadding( this._thisPage );
 			if ( this.options.updatePagePadding ) {
-				this._on( $( window ), { "throttledresize": "updatePagePadding" } );
+				this._on( $.mobile.window, { "throttledresize": "updatePagePadding" } );
 			}
 		},
 
@@ -153,7 +127,7 @@ define( [ "jquery", "../jquery.mobile.widget", "../jquery.mobile.core", "../jque
 				$.mobile.zoom.enable( true );
 			}
 			if ( o.updatePagePadding ) {
-				this._off( $( window ), "throttledresize" );
+				this._off( $.mobile.window, "throttledresize" );
 			}
 
 			if ( o.trackPersistentToolbars ) {
@@ -166,12 +140,9 @@ define( [ "jquery", "../jquery.mobile.widget", "../jquery.mobile.core", "../jque
 
 					nextFooter.add( nextHeader ).appendTo( $.mobile.pageContainer );
 
-					this._on( ui.nextPage, {
-						pageshow: function() {
-							nextHeader.prependTo( ui.nextPage );
-							nextFooter.appendTo( ui.nextPage );
-							this._off( ui.nextPage, "pageshow" );
-						}
+					ui.nextPage.one( "pageshow", function() {
+						nextHeader.prependTo( this );
+						nextFooter.appendTo( this );
 					});
 				}
 			}
@@ -193,7 +164,7 @@ define( [ "jquery", "../jquery.mobile.widget", "../jquery.mobile.core", "../jque
 		},
 
 		_useTransition: function( notransition ) {
-			var $win = $( window ),
+			var $win = $.mobile.window,
 				$el = this.element,
 				scroll = $win.scrollTop(),
 				elHeight = $el.height(),
@@ -273,7 +244,7 @@ define( [ "jquery", "../jquery.mobile.widget", "../jquery.mobile.core", "../jque
 					if ( screen.width < 1025 && $( e.target ).is( o.hideDuringFocus ) && !$( e.target ).closest( ".ui-header-fixed, .ui-footer-fixed" ).length ) {
 						//Fix for issue #4724 Moving through form in Mobile Safari with "Next" and "Previous" system 
 						//controls causes fixed position, tap-toggle false Header to reveal itself 
-						if( e.type === "focusout" && self._visible ) {
+						if ( e.type === "focusout" && !self._visible ) {
 							//wait for the stack to unwind and see if we have jumped to another input
 							delay = setTimeout( function() {
 								self.show();
@@ -299,7 +270,7 @@ define( [ "jquery", "../jquery.mobile.widget", "../jquery.mobile.core", "../jque
 	});
 
 	//auto self-init widgets
-	$( document )
+	$.mobile.document
 		.bind( "pagecreate create", function( e ) {
 
 			// DEPRECATED in 1.1: support for data-fullscreen=true|false on the page element.

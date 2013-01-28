@@ -9,7 +9,7 @@
 		// set will be loaded asynchronously, but each set will be run in serial.
 		asyncLoad: function( seq, baseUrl ) {
 			require({
-				baseUrl: ( baseUrl || "../../../js" )
+				baseUrl: baseUrl || "../../../js"
 			});
 
 			function loadSeq( seq, i ){
@@ -52,6 +52,14 @@
 		setPushState: function() {
 			if( $.support.pushState && location.search.indexOf( "push-state" ) >= 0 ) {
 				$.support.pushState = false;
+			}
+		},
+
+		setPageTransition: function() {
+			if( location.search.indexOf( "transition=none" ) >= 0 ) {
+				$( document ).bind( 'mobileinit', function() {
+					$.mobile.defaultPageTransition = "none";
+				});
 			}
 		},
 
@@ -114,14 +122,19 @@
 		},
 
 		reloadLib: function(libName){
+			var reload;
+
 			if(this.reloads[libName] === undefined) {
 				this.reloads[libName] = {
-					lib: $("script[src$='" + libName + "']"),
+					lib: $( "script[src$='" + libName + "']" ),
+					dataSrcLib: $( "script[data-src$='" + libName + "']"),
 					count: 0
 				};
 			}
 
-			var src = this.reloads[libName].lib.attr('src') + "?" + this.reloads[libName].count++;
+			reload = this.reloads[libName];
+
+			var src = reload.lib.attr('src') || reload.dataSrcLib.attr( "data-src" ) + "?" + this.reloads[libName].count++;
 			$.ajax( { url: src, dataType: "script", async: false } );
 		},
 
@@ -157,7 +170,7 @@
 		},
 
 		openPage: function(hash){
-			location.href = location.href.split('#')[0] + hash;
+			location.hash = hash;
 		},
 
 		sequence: function(fns, interval){
@@ -180,12 +193,15 @@
 			this.eventCascade( seq );
 		},
 
-		eventCascade: function( sequence, timedOut ) {
+		eventTarget: undefined,
+
+		eventCascade: function( sequence, timedOut, data ) {
 			var fn = sequence.shift(),
 				event = sequence.shift(),
 				self = this;
 
 			if( fn === undefined ) {
+				self.eventCascadeTarget = undefined;
 				return;
 			}
 
@@ -197,18 +213,18 @@
 				}, 2000);
 
 				// bind the recursive call to the event
-				$.mobile.pageContainer.one(event, function() {
+				( self.eventTarget || $.mobile.pageContainer ).one(event, function( event, data ) {
 					clearTimeout( warnTimer );
 
 					// Let the current stack unwind before we fire off the next item in the sequence.
 					// TODO setTimeout(self.pageSequence, 0, sequence);
-					setTimeout(function(){ self.eventCascade(sequence); }, 0);
+					setTimeout(function(){ self.eventCascade(sequence, false, data ); }, 0);
 				});
 			}
 
 			// invoke the function which should, in some fashion,
 			// trigger the next event
-			fn( timedOut );
+			fn( timedOut, data );
 		},
 
 // detailedEventCascade: call a function and expect a series of events to be triggered (or not to be triggered), and guard
@@ -295,7 +311,7 @@
 								recordResult( key, event, { timedOut: true } );
 							}
 						});
-					}, 20000);
+					}, 5000);
 
 				$.each( events, function( key, event ) {
 					// Count the events so that we may know how many responses to expect
@@ -414,20 +430,19 @@
 					start();
 				});
 
-
-				hash = location.hash.replace( "#", "" ) !== url ? url : "";
-				location.hash = hash;
+				location.hash = location.hash.replace("#", "") === hash ? "" : "#" + hash;
 			};
 
-			// force the page reset for hash based tests
-			if ( location.hash && !$.support.pushState ) {
-				pageReset( url );
-			}
+			pageReset( url );
+		},
 
-			// force the page reset for all pushstate tests
-			if ( $.support.pushState ) {
-				pageReset( url );
-			}
+		delayStart: function( milliseconds ) {
+			// stop qunit from running the tests until everything is in the page
+			QUnit.config.autostart = false;
+
+			setTimeout(function() {
+				start();
+			}, milliseconds || 2000 );
 		}
 	};
 })(jQuery);

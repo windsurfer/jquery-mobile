@@ -1,12 +1,14 @@
 //>>excludeStart("jqmBuildExclude", pragmas.jqmBuildExclude);
-//>>description: Touch events: touchstart, touchmove, touchend, tap, taphold, swipe, swipeleft, swiperight, scrollstart, scrollstop
-//>>label: touch
+//>>description: Touch events including: touchstart, touchmove, touchend, tap, taphold, swipe, swipeleft, swiperight, scrollstart, scrollstop
+//>>label: Touch
 //>>group: Events
 
 define( [ "jquery", "../jquery.mobile.vmouse", "../jquery.mobile.support.touch" ], function( $ ) {
 //>>excludeEnd("jqmBuildExclude");
 
 (function( $, window, undefined ) {
+	var $document = $( document );
+
 	// add new event shortcuts
 	$.each( ( "touchstart touchmove touchend " +
 		"tap taphold " +
@@ -32,7 +34,7 @@ define( [ "jquery", "../jquery.mobile.vmouse", "../jquery.mobile.support.touch" 
 	function triggerCustomEvent( obj, eventType, event ) {
 		var originalType = event.type;
 		event.type = eventType;
-		$.event.handle.call( obj, event );
+		$.event.dispatch.call( obj, event );
 		event.type = originalType;
 	}
 
@@ -99,7 +101,7 @@ define( [ "jquery", "../jquery.mobile.vmouse", "../jquery.mobile.support.touch" 
 
 					$this.unbind( "vclick", clickHandler )
 						.unbind( "vmouseup", clearTapTimer );
-					$( document ).unbind( "vmousecancel", clearTapHandlers );
+					$document.unbind( "vmousecancel", clearTapHandlers );
 				}
 
 				function clickHandler( event ) {
@@ -114,7 +116,7 @@ define( [ "jquery", "../jquery.mobile.vmouse", "../jquery.mobile.support.touch" 
 
 				$this.bind( "vmouseup", clearTapTimer )
 					.bind( "vclick", clickHandler );
-				$( document ).bind( "vmousecancel", clearTapHandlers );
+				$document.bind( "vmousecancel", clearTapHandlers );
 
 				timer = setTimeout( function() {
 					triggerCustomEvent( thisObject, "taphold", $.Event( "taphold", { target: origTarget } ) );

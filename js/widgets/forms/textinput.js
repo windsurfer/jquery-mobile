@@ -46,7 +46,7 @@ $.widget( "mobile.textinput", $.mobile.widget, {
 
 		$( "label[for='" + input.attr( "id" ) + "']" ).addClass( "ui-input-text" );
 
-		focusedEl = input.addClass("ui-input-text ui-body-"+ theme );
+		focusedEl = input.addClass( "ui-input-text ui-body-"+ theme );
 
 		// XXX: Temporary workaround for issue 785 (Apple bug 8910589).
 		//      Turn off autocorrect and autocomplete on non-iOS 5 devices
@@ -87,6 +87,10 @@ $.widget( "mobile.textinput", $.mobile.widget, {
 					shadow: true,
 					mini: o.mini
 				});
+				
+			if ( !isSearch ) {
+				focusedEl.addClass( "ui-input-has-clear" );
+			}
 
 			toggleClear();
 
@@ -132,13 +136,13 @@ $.widget( "mobile.textinput", $.mobile.widget, {
 
 			// binding to pagechange here ensures that for pages loaded via
 			// ajax the height is recalculated without user input
-			this._on( $( document ), { "pagechange": "_keyup" });
+			this._on( $.mobile.document, { "pagechange": "_keyup" });
 
 			// Issue 509: the browser is not providing scrollHeight properly until the styles load
 			if ( $.trim( input.val() ) ) {
 				// bind to the window load to make sure the height is calculated based on BOTH
 				// the DOM and CSS
-				this._on( $( window ), {"load": "_keyup"});
+				this._on( $.mobile.window, {"load": "_keyup"});
 			}
 		}
 		if ( input.attr( "disabled" ) ) {
@@ -165,9 +169,9 @@ $.widget( "mobile.textinput", $.mobile.widget, {
 		var $el,
 			isSearch = this.element.is( "[type='search'], :jqmData(type='search')" ),
 			inputNeedsWrap = this.element.is( "input" ) && !this.element.is( ":jqmData(type='range')" ),
-			parentNeedsDisabled = this.element.attr( "disabled", true )	&& ( inputNeedsWrap || isSearch );
+			parentNeedsEnabled = this.element.attr( "disabled", false )	&& ( inputNeedsWrap || isSearch );
 
-		if ( parentNeedsDisabled ) {
+		if ( parentNeedsEnabled ) {
 			$el = this.element.parent();
 		} else {
 			$el = this.element;
@@ -178,7 +182,7 @@ $.widget( "mobile.textinput", $.mobile.widget, {
 });
 
 //auto self-init widgets
-$( document ).bind( "pagecreate create", function( e ) {
+$.mobile.document.bind( "pagecreate create", function( e ) {
 	$.mobile.textinput.prototype.enhanceWithin( e.target, true );
 });
 

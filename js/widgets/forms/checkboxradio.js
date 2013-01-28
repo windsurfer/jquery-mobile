@@ -154,7 +154,7 @@ $.widget( "mobile.checkboxradio", $.mobile.widget, {
 			return this.element;
 		}
 
-		return this.element.closest( "form, fieldset, :jqmData(role='page'), :jqmData(role='dialog')" )
+		return this.element.closest( "form, :jqmData(role='page'), :jqmData(role='dialog')" )
 			.find( "input[name='" + this.element[0].name + "'][type='" + this.inputtype + "']" );
 	},
 
@@ -206,7 +206,7 @@ $.widget( "mobile.checkboxradio", $.mobile.widget, {
 $.widget( "mobile.checkboxradio", $.mobile.checkboxradio, $.mobile.behaviors.formReset );
 
 //auto self-init widgets
-$( document ).bind( "pagecreate create", function( e ) {
+$.mobile.document.bind( "pagecreate create", function( e ) {
 	$.mobile.checkboxradio.prototype.enhanceWithin( e.target, true );
 });
 

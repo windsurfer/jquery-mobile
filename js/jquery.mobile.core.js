@@ -5,14 +5,14 @@
 //>>css.structure: ../css/structure/jquery.mobile.core.css
 //>>css.theme: ../css/themes/default/jquery.mobile.theme.css
 
-define( [ "jquery", "text!../version.txt" ], function( $, __version__ ) {
+define( [ "jquery", "./jquery.mobile.ns", "text!../version.txt" ], function( $, __version__ ) {
 //>>excludeEnd("jqmBuildExclude");
 (function( $, window, undefined ) {
 
 	var nsNormalizeDict = {};
 
 	// jQuery.mobile configurable options
-	$.mobile = $.extend( {}, {
+	$.mobile = $.extend($.mobile, {
 
 		// Version of the jQuery Mobile Framework
 		version: __version__,
@@ -84,6 +84,10 @@ define( [ "jquery", "text!../version.txt" ], function( $, __version__ ) {
 			hoverDelay: 200
 		},
 
+		// define the window and the document objects
+		window: $( window ),
+		document: $( document ),
+
 		// TODO might be useful upstream in jquery itself ?
 		keyCode: {
 			ALT: 18,
@@ -134,7 +138,7 @@ define( [ "jquery", "text!../version.txt" ], function( $, __version__ ) {
 
 			setTimeout( function() {
 				window.scrollTo( 0, ypos );
-				$( document ).trigger( "silentscroll", { x: 0, y: ypos });
+				$.mobile.document.trigger( "silentscroll", { x: 0, y: ypos });
 			}, 20 );
 
 			setTimeout( function() {
@@ -240,7 +244,7 @@ define( [ "jquery", "text!../version.txt" ], function( $, __version__ ) {
 		getScreenHeight: function() {
 			// Native innerHeight returns more accurate value for this across platforms,
 			// jQuery version is here as a normalized fallback for platforms like Symbian
-			return window.innerHeight || $( window ).height();
+			return window.innerHeight || $.mobile.window.height();
 		}
 	}, $.mobile );
 

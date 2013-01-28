@@ -11,15 +11,9 @@
 
 	module( "Basic Linked list", {
 		setup: function(){
-			if( location.hash != "#basic-linked-test" ){
-				stop();
-
-				$(document).one("pagechange", function() {
-					start();
-				});
-
-				$.mobile.changePage( home );
-			}
+			$.mobile.navigate.history.stack = [];
+			$.mobile.navigate.history.activeIndex = 0;
+			$.testHelper.navReset( home );
 		},
 
 		teardown: function() {
@@ -472,6 +466,34 @@
             }
         ]);
     });
+
+	asyncTest( "event listviewbeforefilter firing", function() {
+		var $searchPage = $( searchFilterId );
+		$.testHelper.pageSequence([
+			function() {
+				$.mobile.changePage( searchFilterId );
+			},
+
+			function() {
+				var beforeFilterCount = 0;
+				$searchPage.on( "listviewbeforefilter", function( e ) {
+					beforeFilterCount += 1;
+				});
+				$searchPage.find( 'input' ).val( "a" );
+				$searchPage.find( 'input' ).trigger('input');
+				$searchPage.find( 'input' ).trigger('keyup');
+				$searchPage.find( 'input' ).trigger('change');
+				equal( beforeFilterCount, 1, "listviewbeforefilter should fire only once for the same value" );
+
+				$searchPage.find( 'input' ).val( "ab" );
+				$searchPage.find( 'input' ).trigger('input');
+				$searchPage.find( 'input' ).trigger('keyup');
+				equal( beforeFilterCount, 2, "listviewbeforefilter should fire twice since value has changed" );
+
+				start();
+			}
+		]);
+	});
 
 	test( "Refresh applies thumb styling", function(){
 		var ul = $('.ui-page-active ul');
