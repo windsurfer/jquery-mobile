@@ -4,7 +4,11 @@
 //>>group: Events
 
 // TODO break out pushstate support test so we don't depend on the whole thing
-define([ "jquery", "./../jquery.mobile.ns", "./../jquery.mobile.support" ], function( $ ) {
+define([
+	"jquery",
+	"depend!../jquery.hashchange[jquery]",
+	"./../jquery.mobile.ns",
+	"./../jquery.mobile.support" ], function( jQuery ) {
 //>>excludeEnd("jqmBuildExclude");
 
 (function( $, undefined ) {
@@ -37,6 +41,7 @@ define([ "jquery", "./../jquery.mobile.ns", "./../jquery.mobile.support" ], func
 				state = event.originalEvent.state || {},
 				href = location.href;
 
+			beforeNavigate.originalEvent = event;
 			$win.trigger( beforeNavigate );
 
 			if( beforeNavigate.isDefaultPrevented() ){
@@ -66,6 +71,7 @@ define([ "jquery", "./../jquery.mobile.ns", "./../jquery.mobile.support" ], func
 			var newEvent = new $.Event( "navigate" ),
 				beforeNavigate = new $.Event( "beforenavigate" );
 
+			beforeNavigate.originalEvent = event;
 			$win.trigger( beforeNavigate );
 
 			if( beforeNavigate.isDefaultPrevented() ){
